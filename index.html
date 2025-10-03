@@ -1,1 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flamez</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Staatliches&family=Roboto+Condensed:wght@400;700&display=swap');
+        :root {
+            --background-color: #000; --surface-color: #16181C; --primary-color: #FF4500;
+            --secondary-color: #ff8c00; --text-primary: #e7e9ea; --text-secondary: #71767b; --border-color: #2f3336;
+            --error-color: #ff4d4d; --accent-blue: #1d9bf0; --accent-green: #00ba7c; --accent-red: #f91880;
+            --fire-gradient: linear-gradient(90deg, #FF9800, #F44336);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--background-color); font-family: 'Roboto Condensed', sans-serif; color: var(--text-primary); }
+        .hidden { display: none !important; }
 
+        /* --- AUTH PAGE STYLES --- */
+        .auth-page-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-container { background: rgba(10,10,10,0.7); backdrop-filter: blur(10px); border: 1px solid var(--border-color); padding: 40px; border-radius: 16px; width: 100%; max-width: 450px; text-align: center; }
+        .auth-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: 20px; }
+        .auth-title { font-family: 'Staatliches', cursive; font-size: 2.5rem; letter-spacing: 2px; margin-bottom: 30px; }
+        .auth-form input { width: 100%; padding: 14px; margin-bottom: 20px; background: #000; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-size: 1.1rem; }
+        .auth-form input:focus { outline: none; border-color: var(--primary-color); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 1.1rem; border-radius: 99px; padding: 14px; cursor: pointer; width: 100%; border: none; transition: background-color 0.2s; }
+        .btn-primary { background: var(--fire-gradient); color: white; }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .auth-footer { margin-top: 25px; color: var(--text-secondary); }
+        .auth-footer a { color: var(--accent-blue); text-decoration: none; font-weight: bold; }
+
+        /* --- NEW APP LAYOUT --- */
+        .app-container { display: flex; justify-content: center; max-width: 1265px; margin: 0 auto; }
+        .left-sidebar { width: 275px; height: 100vh; position: sticky; top: 0; padding: 0 8px; display: flex; flex-direction: column; justify-content: space-between; }
+        .main-column { width: 600px; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); min-height: 100vh; }
+        .main-header { position: sticky; top: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(12px); z-index: 10; padding: 0 16px; border-bottom: 1px solid var(--border-color); }
+        .main-header h2 { font-size: 20px; font-weight: bold; line-height: 53px; }
+
+        /* --- NEW SIDEBAR STYLES --- */
+        .sidebar-logo { padding: 12px 0; }
+        .sidebar-logo img { width: 50px; height: 50px; object-fit: contain; }
+        .nav-link { display: flex; align-items: center; padding: 12px; text-decoration: none; color: var(--text-primary); cursor: pointer; border-radius: 99px; width: fit-content; transition: background-color 0.2s; }
+        .nav-link:hover { background-color: rgba(231, 233, 234, 0.1); }
+        .nav-link svg { width: 26.25px; height: 26.25px; }
+        .nav-link span { font-size: 20px; font-weight: 400; margin-left: 20px; margin-right: 16px; }
+        .nav-link.active span { font-weight: 700; }
+        .sidebar-post-btn { background: var(--fire-gradient); color: white; font-size: 17px; font-weight: 700; padding: 16px; margin-top: 16px; }
+        .sidebar-post-btn:hover { filter: brightness(1.1); }
+        .sidebar-profile { padding: 12px 0; cursor: pointer; }
+        .sidebar-profile-inner { display: flex; align-items: center; padding: 12px; border-radius: 99px; transition: background-color 0.2s; }
+        .sidebar-profile-inner:hover { background-color: rgba(231, 233, 234, 0.1); }
+        .sidebar-profile .avatar { width: 40px; height: 40px; }
+        .sidebar-profile-text { margin-left: 12px; flex: 1; }
+        .sidebar-profile-text .display-name { font-weight: 700; }
+        .sidebar-profile-text .handle { color: var(--text-secondary); }
+
+        /* --- POST & FEED STYLES --- */
+        .compose-flame { display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background-color: #222; }
+        #flame-textarea { width: 100%; background: none; border: none; outline: none; color: var(--text-primary); font-size: 20px; resize: none; padding-top: 12px; }
+        .media-preview-container { margin-top: 10px; position: relative; }
+        .media-preview { max-width: 100%; border-radius: 15px; border: 1px solid var(--border-color); }
+        .remove-media-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: bold; border: none; }
+        .compose-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+        .compose-actions .btn-primary { width: auto; padding: 8px 16px; font-size: 1rem; }
+        .flame-post { display: flex; padding: 12px 16px; border-bottom: 1px solid var(--border-color); gap: 12px; }
+        .post-body { display: flex; flex-direction: column; width: 100%; }
+        .post-header { display: flex; align-items: center; gap: 4px; }
+        .post-header .display-name { font-weight: bold; }
+        .post-header .handle, .post-header .timestamp { color: var(--text-secondary); }
+        .post-content { margin: 2px 0 12px 0; white-space: pre-wrap; word-wrap: break-word; font-size: 1rem; }
+        .post-media { border-radius: 16px; overflow: hidden; border: 1px solid var(--border-color); }
+        .post-media img, .post-media video { max-width: 100%; display: block; }
+        .post-actions { display: flex; justify-content: space-between; margin-top: 12px; max-width: 425px; }
+        .action-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-weight: normal; transition: all 0.2s; }
+        .action-btn img, .action-btn svg { width: 18px; height: 18px; transition: all 0.2s; }
+        .action-btn:hover, .action-btn.props:hover { color: var(--accent-red); transform: scale(1.1); }
+        .action-btn.reignite:hover { color: var(--accent-green); transform: scale(1.1); }
+        .placeholder-content { padding: 40px; text-align: center; color: var(--text-secondary); font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div id="auth-page" class="auth-page-wrapper">
+        <div id="login-view" class="auth-container">
+             <img src="logo-1.png" alt="Flamez Logo" class="auth-logo">
+             <h1 class="auth-title">Sign in to Flamez</h1>
+             <form id="loginForm" class="auth-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <div id="login-error" class="error-message"></div>
+                <button type="submit" class="btn btn-primary">Log in</button>
+             </form>
+             <div class="auth-footer">Don't have an account? <a id="show-register-link">Sign Up</a></div>
+        </div>
+        <div id="register-view" class="auth-container hidden">
+            <img src="logo-1.png" alt="Flamez Logo" class="auth-logo">
+            <h1 class="auth-title">Create Your Account</h1>
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="register-displayName" placeholder="Display Name" required>
+                <input type="text" id="register-handle" placeholder="@handle" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Password" required>
+                <div id="register-error" class="error-message"></div>
+                <button type="submit" class="btn btn-primary">Create Account</button>
+            </form>
+            <div class="auth-footer">Have an account already? <a id="back-to-login-link">Log In</a></div>
+        </div>
+    </div>
+
+    <div id="app-page" class="app-container hidden">
+        <aside class="left-sidebar">
+            <div>
+                <div class="sidebar-logo"><a href="#"><img src="logo-1.png" alt="Flamez Logo"></a></div>
+                <nav id="sidebar-nav">
+                    <a href="#" id="nav-home" class="nav-link active"><svg viewBox="0 0 24 24"><path d="M12 1.696L.622 8.807l1.06 1.696L3 9.679V19.5a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5V9.679l1.318.824 1.06-1.696L12 1.696zM19.5 19.5h-15V8.847l7.5-4.687 7.5 4.687V19.5z" fill="currentColor"></path></svg><span>Home</span></a>
+                    <a href="#" id="nav-cyphers" class="nav-link"><svg viewBox="0 0 24 24"><path d="M18.5 4.31H5.52A2.3 2.3 0 003.25 6.6v10.8a2.3 2.3 0 002.27 2.29h12.98a2.3 2.3 0 002.25-2.3V6.6a2.3 2.3 0 00-2.25-2.29zm.75 13.09a.75.75 0 01-.75.75H5.52a.75.75 0 01-.75-.75V6.6a.75.75 0 01.75-.75h12.98c.41 0 .75.34.75.75v10.8zM9.5 15.17l-3.9-3.89a.75.75 0 011.06-1.06l2.84 2.83 5.4-5.4a.75.75 0 011.06 1.06l-6.46 6.46a.75.75 0 01-1.06 0z" fill="currentColor"></path></svg><span>Cyphers</span></a>
+                    <a href="#" id="nav-topflames" class="nav-link"><svg viewBox="0 0 24 24"><path d="M18 6.414V4h-2v2.414l-2-2L12.586 2 18 7.414 23.414 2 22 4.414l-4 4-1.414-1.414L18 5.586zM1.5 9.25V21h10.25v-1.5H3V9.25H1.5zM6 18H4.5v-1.5H6V18zm0-3H4.5v-1.5H6v1.5zm0-3H4.5v-1.5H6v1.5zm3 6H7.5v-1.5H9V21zm0-3H7.5v-1.5H9v1.5zm0-3H7.5v-1.5H9v1.5zm3 6h-1.5v-1.5H12V21zm0-3h-1.5v-1.5H12v1.5z" fill="currentColor"></path></svg><span>Top Flames</span></a>
+                    <a href="#" id="nav-studios" class="nav-link"><svg viewBox="0 0 24 24"><path d="M21 4H3v1.5h18V4zm0 6.5H3v1.5h18v-1.5zM21 17H3v1.5h18V17z" fill="currentColor"></path></svg><span>Studios</span></a>
+                    <a href="#" id="nav-profile" class="nav-link"><svg viewBox="0 0 24 24"><path d="M5.65 19.35A8.96 8.96 0 0012 21.5a8.96 8.96 0 006.35-2.65A8.96 8.96 0 0012 16.5a8.96 8.96 0 00-6.35 2.85zM17.5 9a5.5 5.5 0 10-11 0 5.5 5.5 0 0011 0zM22 9a8.5 8.5 0 11-17 0 8.5 8.5 0 0117 0z" fill="currentColor"></path></svg><span>Profile</span></a>
+                </nav>
+                <button class="btn sidebar-post-btn">Post Flame</button>
+            </div>
+            <div id="sidebar-profile-box" class="sidebar-profile">
+                <div class="sidebar-profile-inner">
+                    <img id="sidebar-avatar" src="" class="avatar">
+                    <div class="sidebar-profile-text">
+                        <div id="sidebar-display-name" class="display-name"></div>
+                        <div id="sidebar-handle" class="handle"></div>
+                    </div>
+                    <span>...</span>
+                </div>
+            </div>
+        </aside>
+        <main class="main-column">
+            <div class="main-header"><h2 id="main-header-title">Home</h2></div>
+            <div id="compose-container" class="compose-flame">
+                <img id="compose-avatar" src="" class="avatar">
+                <div style="width: 100%;">
+                    <form id="flame-form">
+                        <textarea id="flame-textarea" placeholder="What's happening?!"></textarea>
+                        <div id="media-preview-container"></div>
+                        <div class="compose-actions">
+                            <input type="file" id="media-file-input" class="hidden" accept="image/*,video/*">
+                            <input type="file" id="avatar-upload-input" class="hidden" accept="image/*">
+                            <button type="button" id="media-upload-btn" title="Media" style="background:none; border:none; cursor:pointer;"><svg fill="var(--accent-blue)" viewBox="0 0 24 24"><g><path d="M3 5.5C3 4.119 4.119 3 5.5 3h13C19.881 3 21 4.119 21 5.5v13c0 1.381-1.119 2.5-2.5 2.5h-13C4.119 21 3 19.881 3 18.5v-13zM5.5 5c-.276 0-.5.224-.5.5v9.086l3-3 3 3 5-5 3 3V5.5c0-.276-.224-.5-.5h-13z"></path></g></svg></button>
+                            <button type="submit" class="btn btn-primary">Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div id="flame-feed-container"></div>
+        </main>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const $ = (selector) => document.querySelector(selector);
+        let currentUser = null;
+        let attachedMediaBase64 = null;
+        
+        const BATTLE_BOT_AVATAR = "battle-bot.png";
+        const PROPS_ICON_URL = "flame-props-icon.png";
+        const REIGNITE_ICON_URL = "flame-icon.png";
+
+        const getDb = () => JSON.parse(localStorage.getItem('flamez_db_v9')) || { users: [], posts: [] };
+        const saveDb = (db) => localStorage.setItem('flamez_db_v9', JSON.stringify(db));
+        const getSession = () => JSON.parse(localStorage.getItem('flamez_session'));
+        const saveSession = (user) => localStorage.setItem('flamez_session', JSON.stringify(user));
+        const clearSession = () => localStorage.removeItem('flamez_session');
+
+        const showPage = (page) => { 
+            $('#auth-page').classList.toggle('hidden', page !== 'auth'); 
+            $('#app-page').classList.toggle('hidden', page !== 'app'); 
+        };
+        const showAuthView = (view) => { 
+            $('#login-view').classList.toggle('hidden', view !== 'login'); 
+            $('#register-view').classList.toggle('hidden', view !== 'register'); 
+        };
+        const showAuthError = (view, message) => { $(`#${view}-error`).textContent = message; };
+        const clearAuthErrors = () => { $('#login-error').textContent = ''; $('#register-error').textContent = ''; }
+
+        const init = () => {
+            const sessionUser = getSession();
+            if (sessionUser) {
+                const db = getDb();
+                currentUser = db.users.find(u => u.id === sessionUser.id);
+                if (currentUser) {
+                    if (!currentUser.avatar) currentUser.avatar = BATTLE_BOT_AVATAR;
+                    setupAppPage(); showPage('app');
+                } else { clearSession(); showPage('auth'); showAuthView('login'); }
+            } else { showPage('auth'); showAuthView('login'); }
+        };
+
+        $('#registerForm').addEventListener('submit', (e) => {
+            e.preventDefault(); clearAuthErrors();
+            const db = getDb();
+            const displayName = $('#register-displayName').value.trim();
+            let handle = $('#register-handle').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+            if (handle.startsWith('@')) handle = handle.substring(1);
+            const email = $('#register-email').value.trim().toLowerCase();
+            const password = $('#register-password').value;
+
+            if (!displayName || !handle || !email || !password) return showAuthError('register', 'Please fill out all fields.');
+            if (db.users.some(u => u.email === email)) return showAuthError('register', 'Email already in use.');
+            if (db.users.some(u => u.handle === handle)) return showAuthError('register', '@handle is already taken.');
+            
+            const user = { id: Date.now(), displayName, handle, email, password: password, avatar: BATTLE_BOT_AVATAR };
+            db.users.push(user); saveDb(db);
+            
+            currentUser = { ...user };
+            saveSession(currentUser); setupAppPage(); showPage('app');
+        });
+        
+        $('#loginForm').addEventListener('submit', (e) => {
+            e.preventDefault(); clearAuthErrors();
+            const email = $('#login-email').value.trim().toLowerCase();
+            const password = $('#login-password').value;
+            const user = getDb().users.find(u => u.email === email);
+            
+            if (user && user.password === password) {
+                currentUser = user;
+                if (!currentUser.avatar) currentUser.avatar = BATTLE_BOT_AVATAR;
+                saveSession(currentUser); setupAppPage(); showPage('app');
+            } else {
+                showAuthError('login', 'Invalid email or password.');
+            }
+        });
+
+        $('#show-register-link').onclick = () => { clearAuthErrors(); showAuthView('register'); };
+        $('#back-to-login-link').onclick = () => { clearAuthErrors(); showAuthView('login'); };
+
+        const setupAppPage = () => {
+            if (!currentUser) return;
+            $('#compose-avatar').src = currentUser.avatar;
+            $('#sidebar-avatar').src = currentUser.avatar;
+            $('#sidebar-display-name').textContent = currentUser.displayName;
+            $('#sidebar-handle').textContent = `@${currentUser.handle}`;
+            navigateTo('Home');
+        };
+
+        const timeAgo = (timestamp) => {
+            const seconds = Math.floor((new Date() - timestamp) / 1000);
+            if (seconds < 60) return `${seconds}s`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h`;
+            const days = Math.floor(hours / 24);
+            return `${days}d`;
+        }
+
+        const renderFeed = () => {
+            const db = getDb();
+            const feedContainer = $('#flame-feed-container');
+            feedContainer.innerHTML = '';
+            
+            db.posts.sort((a, b) => b.timestamp - a.timestamp).forEach(post => {
+                const author = db.users.find(u => u.id === post.authorId);
+                if (!author) return;
+                
+                let mediaElement = '';
+                if (post.media) {
+                    const mediaType = post.media.startsWith('data:video') ? 'video' : 'img';
+                    mediaElement = `<div class="post-media"><${mediaType} src="${post.media}" class="media-preview" ${mediaType === 'video' ? 'controls' : ''}></${mediaType}></div>`;
+                }
+
+                const postElement = document.createElement('article');
+                postElement.className = 'flame-post';
+                postElement.innerHTML = `
+                    <img src="${author.avatar || BATTLE_BOT_AVATAR}" class="avatar">
+                    <div class="post-body">
+                        <div class="post-header">
+                            <span class="display-name">${author.displayName}</span>
+                            <span class="handle">@${author.handle}</span>
+                            <span class="timestamp">· ${timeAgo(post.timestamp)}</span>
+                        </div>
+                        <div class="post-content">${post.content}</div>
+                        ${mediaElement}
+                        <div class="post-actions">
+                             <button class="action-btn props"><img src="${PROPS_ICON_URL}" alt="Props"><span>0</span></button>
+                             <button class="action-btn reignite"><img src="${REIGNITE_ICON_URL}" alt="Reignite"><span>0</span></button>
+                             <button class="action-btn share"><svg viewBox="0 0 24 24"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.37-1.11 2.49-2.47 2.49H5.49C4.13 21 3 19.88 3 18.51V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5V15h2z" fill="currentColor"></path></svg></button>
+                        </div>
+                    </div>`;
+                feedContainer.appendChild(postElement);
+            });
+        };
+        
+        $('#flame-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const content = $('#flame-textarea').value.trim();
+            if ((content || attachedMediaBase64) && currentUser) {
+                const db = getDb();
+                db.posts.push({id: Date.now(), authorId: currentUser.id, content: content, media: attachedMediaBase64, timestamp: Date.now()});
+                saveDb(db);
+                $('#flame-textarea').value = '';
+                $('#media-preview-container').innerHTML = '';
+                $('#media-file-input').value = '';
+                attachedMediaBase64 = null;
+                renderFeed();
+            }
+        });
+
+        $('#media-upload-btn').onclick = () => $('#media-file-input').click();
+        $('#media-file-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                attachedMediaBase64 = event.target.result;
+                const previewContainer = $('#media-preview-container');
+                let previewElement = file.type.startsWith('video/') ? `<video src="${attachedMediaBase64}" class="media-preview" muted autoplay loop></video>` : `<img src="${attachedMediaBase64}" class="media-preview">`;
+                previewContainer.innerHTML = `${previewElement}<button type="button" class="remove-media-btn">×</button>`;
+                previewContainer.querySelector('.remove-media-btn').onclick = () => {
+                    previewContainer.innerHTML = ''; attachedMediaBase64 = null; $('#media-file-input').value = '';
+                };
+            };
+            reader.readAsDataURL(file);
+        };
+
+        $('#sidebar-profile-box').onclick = () => $('#avatar-upload-input').click();
+        $('#avatar-upload-input').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const newAvatarUrl = event.target.result;
+                currentUser.avatar = newAvatarUrl;
+                const db = getDb();
+                const userInDb = db.users.find(u => u.id === currentUser.id);
+                if (userInDb) { userInDb.avatar = newAvatarUrl; saveDb(db); }
+                saveSession(currentUser);
+                setupAppPage();
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // --- ✅ NEW: SIDEBAR NAVIGATION LOGIC ---
+        const navigateTo = (pageName) => {
+            // Update active link style
+            document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => link.classList.remove('active'));
+            $(`#nav-${pageName.toLowerCase().replace(' ', '')}`).classList.add('active');
+
+            // Update header
+            $('#main-header-title').textContent = pageName;
+
+            // Show/hide content
+            const composeContainer = $('#compose-container');
+            const feedContainer = $('#flame-feed-container');
+
+            if (pageName === 'Home') {
+                composeContainer.classList.remove('hidden');
+                renderFeed();
+            } else {
+                composeContainer.classList.add('hidden');
+                feedContainer.innerHTML = `<div class="placeholder-content"><h2>${pageName}</h2><p>This page is coming soon!</p></div>`;
+            }
+        };
+
+        document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageName = link.querySelector('span').textContent;
+                navigateTo(pageName);
+            });
+        });
+        
+        init();
+    });
+    </script>
+</body>
+</html>
